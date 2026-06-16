@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manual Entry · PocketPetal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="/css/pocketpetal.css" rel="stylesheet"/>
+  <script src="/js/shared.js" defer></script>
+</head>
+<body data-page="manual" data-auth-required="true" data-page-title="Manual Entry">
+
+  <div id="pp-page-content" style="display:none">
+    <h1 class="pp-hero-title" style="font-size:1.6rem">✍️ Log a little thing</h1>
+    <p class="pp-hero-sub">Manually sow a bloom into your garden ledger.</p>
+
+    <div class="pp-grid pp-grid-main">
+      <div class="pp-card pp-form-card">
+        <p class="pp-section-title" id="form-title">Sow new bloom</p>
+        <form id="expense-form">
+          <input type="hidden" id="expense-id"/>
+          <div class="pp-field">
+            <label class="pp-label" for="amount">Amount (₹)</label>
+            <input class="pp-input" type="number" step="0.01" id="amount" required min="0.01" placeholder="0"/>
+          </div>
+          <div class="pp-field">
+            <label class="pp-label" for="description">Description</label>
+            <input class="pp-input" type="text" id="description" required placeholder="Matcha latte & croissant"/>
+          </div>
+          <div class="pp-field">
+            <label class="pp-label" for="category">Category</label>
+            <select class="pp-select" id="category" required></select>
+          </div>
+          <div class="pp-field">
+            <label class="pp-label" for="paymentMethod">Payment</label>
+            <select class="pp-select" id="paymentMethod" required>
+              <option value="UPI">UPI</option>
+              <option value="Debit Card">Debit Card</option>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Cash">Cash</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+          </div>
+          <div class="pp-field">
+            <label class="pp-label" for="date">Date</label>
+            <input class="pp-input" type="date" id="date" required/>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button type="submit" class="pp-btn pp-btn-primary" id="submit-btn" style="flex:1;justify-content:center">Add bloom →</button>
+            <button type="button" class="pp-btn pp-btn-secondary" id="cancel-btn" style="display:none" onclick="resetForm()">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="pp-card">
+        <p class="pp-section-title">Bloom ledger</p>
+        <p class="pp-section-sub">all your little things</p>
+        <div style="overflow-x:auto">
+          <table class="pp-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th style="text-align:right">Amount</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="ledger-body">
+              <tr><td colspan="5" style="text-align:center;color:var(--pp-text-muted);padding:24px">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = () => PocketPetal.getToken();
+    let categories = [];
+
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+    async function init() {
+      await loadCategories();
+      await loadExpenses();
+    }
+
+    async function loadCategories() {
+      const res = await fetch('/api/categories', { headers: { Authorization: `Bearer ${token()}` } });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        categories = data.data;
+        const sel = document.getElementById('category');
+        sel.innerHTML = '<option value="">Select category</option>' +
+          categories.map(c => `<option value="${c.id}">${PocketPetal.categoryEmoji(c.name)} ${c.name}</option>`).join('');
+      }
+    }
+
+    async function loadExpenses() {
+      const res = await fetch('/api/expenses', { headers: { Authorization: `Bearer ${token()}` } });
+      const data = await res.json();
+      const tbody = document.getElementById('ledger-body');
+      if (!res.ok || !data.success) return;
+
+      const expenses = data.data;
+      if (!expenses.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--pp-text-muted);padding:24px">No blooms yet — add your first!</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = expenses.map(exp => {
+        const d = new Date(exp.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const cat = exp.category?.name || '—';
+        return `<tr>
+          <td>${d}</td>
+          <td><strong>${exp.description}</strong><br><span style="font-size:0.75rem;color:var(--pp-text-muted)">${exp.paymentMethod}</span></td>
+          <td>${PocketPetal.categoryEmoji(cat)} ${cat}</td>
+          <td style="text-align:right;font-weight:800;color:var(--pp-primary-dark)">${PocketPetal.formatMoneyFull(exp.amount)}</td>
+          <td style="white-space:nowrap">
+            <button type="button" onclick="editExpense('${exp.id}')" style="background:none;border:none;color:var(--pp-secondary);font-weight:700;font-size:0.78rem;cursor:pointer">Edit</button>
+            <button type="button" onclick="deleteExpense('${exp.id}')" style="background:none;border:none;color:var(--pp-primary);font-weight:700;font-size:0.78rem;cursor:pointer;margin-left:6px">Delete</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    document.getElementById('expense-form').onsubmit = async e => {
+      e.preventDefault();
+      const id = document.getElementById('expense-id').value;
+      const payload = {
+        amount: parseFloat(document.getElementById('amount').value),
+        description: document.getElementById('description').value,
+        categoryId: document.getElementById('category').value || null,
+        paymentMethod: document.getElementById('paymentMethod').value,
+        date: new Date(document.getElementById('date').value).toISOString(),
+      };
+      const url = id ? `/api/expenses/${id}` : '/api/expenses';
+      const res = await fetch(url, {
+        method: id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) { alert(data.error || 'Failed'); return; }
+      resetForm();
+      loadExpenses();
+    };
+
+    window.editExpense = async id => {
+      const res = await fetch(`/api/expenses/${id}`, { headers: { Authorization: `Bearer ${token()}` } });
+      const data = await res.json();
+      if (!res.ok || !data.success) return;
+      const exp = data.data;
+      document.getElementById('expense-id').value = exp.id;
+      document.getElementById('amount').value = exp.amount;
+      document.getElementById('description').value = exp.description;
+      document.getElementById('category').value = exp.categoryId || '';
+      document.getElementById('paymentMethod').value = exp.paymentMethod;
+      document.getElementById('date').value = new Date(exp.date).toISOString().split('T')[0];
+      document.getElementById('form-title').textContent = 'Refine bloom';
+      document.getElementById('submit-btn').textContent = 'Save changes →';
+      document.getElementById('cancel-btn').style.display = 'block';
+    };
+
+    window.deleteExpense = async id => {
+      if (!confirm('Prune this entry from your garden?')) return;
+      const res = await fetch(`/api/expenses/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token()}` } });
+      const data = await res.json();
+      if (res.ok && data.success) loadExpenses();
+      else alert(data.error || 'Failed');
+    };
+
+    window.resetForm = () => {
+      document.getElementById('expense-id').value = '';
+      document.getElementById('expense-form').reset();
+      document.getElementById('date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('form-title').textContent = 'Sow new bloom';
+      document.getElementById('submit-btn').textContent = 'Add bloom →';
+      document.getElementById('cancel-btn').style.display = 'none';
+    };
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

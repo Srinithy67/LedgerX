@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Categories · PocketPetal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="/css/pocketpetal.css" rel="stylesheet"/>
+  <script src="/js/shared.js" defer></script>
+</head>
+<body data-page="categories" data-auth-required="true" data-page-title="Categories">
+
+  <div id="pp-page-content" style="display:none">
+    <h1 class="pp-hero-title" style="font-size:1.6rem">🏷 Garden plot categories</h1>
+    <p class="pp-hero-sub">Organize your spending jars — essentials, leisure, and savings.</p>
+
+    <div class="pp-grid pp-grid-main">
+      <div class="pp-card pp-form-card">
+        <p class="pp-section-title" id="form-title">Sow category</p>
+        <form id="category-form">
+          <input type="hidden" id="category-id"/>
+          <div class="pp-field">
+            <label class="pp-label" for="name">Name</label>
+            <input class="pp-input" type="text" id="name" required placeholder="Wellness"/>
+          </div>
+          <div class="pp-field">
+            <label class="pp-label" for="categoryGroup">Plot group</label>
+            <select class="pp-select" id="categoryGroup" required>
+              <option value="essential">Essential · necessary petals</option>
+              <option value="leisure">Leisure · joyful blooms</option>
+              <option value="savings">Savings · future roots</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button type="submit" class="pp-btn pp-btn-primary" id="submit-btn" style="flex:1;justify-content:center">Create →</button>
+            <button type="button" class="pp-btn pp-btn-secondary" id="cancel-btn" style="display:none" onclick="resetForm()">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="pp-card">
+        <p class="pp-section-title">Your categories</p>
+        <p class="pp-section-sub">system & custom jars</p>
+        <div id="categories-grid" class="pp-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+          <div style="grid-column:1/-1;text-align:center;color:var(--pp-text-muted);padding:24px">Loading…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = () => PocketPetal.getToken();
+
+    const GROUP_LABEL = { essential: 'Essential', leisure: 'Leisure', savings: 'Savings' };
+    const GROUP_COLOR = {
+      essential: 'var(--pp-primary-soft)',
+      leisure: 'var(--pp-secondary-soft)',
+      savings: '#f0f4e0',
+    };
+
+    async function loadCategories() {
+      const res = await fetch('/api/categories', { headers: { Authorization: `Bearer ${token()}` } });
+      const data = await res.json();
+      const grid = document.getElementById('categories-grid');
+      if (!res.ok || !data.success) return;
+
+      const cats = data.data;
+      if (!cats.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--pp-text-muted);padding:24px">No categories yet</div>';
+        return;
+      }
+
+      grid.innerHTML = cats.map(cat => {
+        const actions = cat.isCustom
+          ? `<div style="margin-top:10px;display:flex;gap:8px">
+              <button type="button" onclick="editCat('${cat.id}','${cat.name.replace(/'/g,"\\'")}','${cat.categoryGroup}')" style="background:none;border:none;color:var(--pp-secondary);font-weight:700;font-size:0.78rem;cursor:pointer">Edit</button>
+              <button type="button" onclick="deleteCat('${cat.id}')" style="background:none;border:none;color:var(--pp-primary);font-weight:700;font-size:0.78rem;cursor:pointer">Delete</button>
+            </div>`
+          : '<span style="font-size:0.68rem;color:var(--pp-text-muted);margin-top:8px;display:block">system built-in</span>';
+        return `<div class="pp-card" style="padding:16px;background:${GROUP_COLOR[cat.categoryGroup] || 'white'}">
+          <div style="font-size:1.4rem;margin-bottom:6px">${PocketPetal.categoryEmoji(cat.name)}</div>
+          <p style="font-weight:800;margin:0;font-size:0.95rem">${cat.name}</p>
+          <span style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--pp-text-muted)">${GROUP_LABEL[cat.categoryGroup]}</span>
+          ${actions}
+        </div>`;
+      }).join('');
+    }
+
+    document.getElementById('category-form').onsubmit = async e => {
+      e.preventDefault();
+      const id = document.getElementById('category-id').value;
+      const payload = {
+        name: document.getElementById('name').value,
+        categoryGroup: document.getElementById('categoryGroup').value,
+      };
+      const url = id ? `/api/categories/${id}` : '/api/categories';
+      const res = await fetch(url, {
+        method: id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) { alert(data.error || 'Failed'); return; }
+      resetForm();
+      loadCategories();
+    };
+
+    window.editCat = (id, name, group) => {
+      document.getElementById('category-id').value = id;
+      document.getElementById('name').value = name;
+      document.getElementById('categoryGroup').value = group;
+      document.getElementById('form-title').textContent = 'Refine category';
+      document.getElementById('submit-btn').textContent = 'Save →';
+      document.getElementById('cancel-btn').style.display = 'block';
+    };
+
+    window.deleteCat = async id => {
+      if (!confirm('Prune this category?')) return;
+      const res = await fetch(`/api/categories/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token()}` } });
+      const data = await res.json();
+      if (res.ok && data.success) loadCategories();
+      else alert(data.error || 'Failed');
+    };
+
+    window.resetForm = () => {
+      document.getElementById('category-id').value = '';
+      document.getElementById('category-form').reset();
+      document.getElementById('form-title').textContent = 'Sow category';
+      document.getElementById('submit-btn').textContent = 'Create →';
+      document.getElementById('cancel-btn').style.display = 'none';
+    };
+
+    document.addEventListener('DOMContentLoaded', loadCategories);
+  </script>
+</body>
+</html>

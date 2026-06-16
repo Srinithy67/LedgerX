@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard · PocketPetal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="/css/pocketpetal.css" rel="stylesheet"/>
+  <script src="/js/shared.js" defer></script>
+</head>
+<body data-page="dashboard" data-auth-required="true" data-page-title="Dashboard">
+
+  <div id="pp-page-content" style="display:none">
+
+    <p class="pp-date" id="pp-date"></p>
+    <h1 class="pp-hero-title" id="pp-greeting">Good afternoon, <span class="pp-serif">Friend</span> 🌸</h1>
+    <p class="pp-hero-sub">Here's how your little garden of spending is growing this month.</p>
+
+    <div class="pp-cta-row">
+      <a href="/upload.html" class="pp-btn pp-btn-primary">📸 Upload screenshot</a>
+      <a href="/manual.html" class="pp-btn pp-btn-secondary">✍️ Log expense</a>
+    </div>
+
+    <div class="pp-grid pp-grid-2" style="margin-bottom:20px">
+      <div class="pp-card">
+        <div class="pp-card-header">
+          <div class="pp-card-emoji">🍵</div>
+          <span class="pp-card-meta" id="budget-meta">/ ₹35,000 budget</span>
+        </div>
+        <p class="pp-card-label">This month</p>
+        <p class="pp-card-value" id="monthly-spend">₹0</p>
+        <div class="pp-progress"><div class="pp-progress-bar" id="monthly-progress" style="width:0%"></div></div>
+        <p class="pp-card-meta" id="monthly-progress-text" style="margin-top:10px">You're using 0% of your monthly budget. Sweet pace.</p>
+      </div>
+
+      <div class="pp-card">
+        <div class="pp-card-header">
+          <div class="pp-card-emoji green">🌷</div>
+          <span class="pp-card-meta" id="savings-pct">100%</span>
+        </div>
+        <p class="pp-card-label">Savings jar</p>
+        <p class="pp-card-value" id="savings-amount">₹35,000</p>
+        <div class="pp-progress green"><div class="pp-progress-bar" id="savings-progress" style="width:100%"></div></div>
+        <p class="pp-card-meta" id="savings-meta" style="margin-top:10px">saved this month</p>
+      </div>
+    </div>
+
+    <div class="pp-grid pp-grid-main">
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div class="pp-card">
+          <p class="pp-section-title">14-day trend</p>
+          <p class="pp-section-sub">Where the petals fell · daily ₹</p>
+          <div class="pp-chart" id="chart-bars">
+            <div style="color:var(--pp-text-muted);font-size:0.85rem;padding:40px 0;width:100%;text-align:center">Loading chart…</div>
+          </div>
+        </div>
+
+        <div class="pp-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div>
+              <p class="pp-section-title" style="margin:0">Recent little things</p>
+              <p class="pp-section-sub" style="margin:4px 0 0">your latest blooms</p>
+            </div>
+            <a href="/manual.html" style="font-size:0.82rem;font-weight:700;color:var(--pp-primary);text-decoration:none">add new →</a>
+          </div>
+          <div class="pp-tx-list" id="recent-list">
+            <div style="text-align:center;padding:32px;color:var(--pp-text-muted);font-size:0.88rem">No little things yet — log your first expense!</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div class="pp-card">
+          <p class="pp-section-title">Category bouquet</p>
+          <p class="pp-section-sub">Where it bloomed · total <strong id="category-total">₹0</strong></p>
+          <ul class="pp-cat-list" id="category-list">
+            <li class="pp-cat-item" style="color:var(--pp-text-muted);justify-content:center">Loading…</li>
+          </ul>
+        </div>
+
+        <div class="pp-card">
+          <p class="pp-section-title">Most-loved categories</p>
+          <p class="pp-section-sub">top jars</p>
+          <ul class="pp-cat-list" id="top-categories">
+            <li class="pp-cat-item" style="color:var(--pp-text-muted);justify-content:center">—</li>
+          </ul>
+          <p class="pp-card-meta" id="insights-text" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--pp-border)">
+            Start logging to see where your petals gather most.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const token = () => PocketPetal.getToken();
+    const fmt = (n) => PocketPetal.formatMoney(n);
+    const fmtFull = (n) => PocketPetal.formatMoneyFull(n);
+    const BUDGET = PocketPetal.BUDGET_LIMIT;
+
+    async function loadDashboard() {
+      try {
+        const [expRes, ansRes] = await Promise.all([
+          fetch('/api/expenses', { headers: { Authorization: `Bearer ${token()}` } }),
+          fetch('/api/analytics', { headers: { Authorization: `Bearer ${token()}` } }),
+        ]);
+        const expData = await expRes.json();
+        const ansData = await ansRes.json();
+        if (expRes.ok && expData.success && ansRes.ok && ansData.success) {
+          render(expData.data, ansData.data);
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    function render(expenses, analytics) {
+      const monthKey = new Date().toISOString().slice(0, 7);
+      const monthly = analytics.monthlySpending.find(m => m.month === monthKey);
+      const spent = monthly ? monthly.amount : 0;
+      const pct = Math.min((spent / BUDGET) * 100, 100);
+
+      document.getElementById('monthly-spend').textContent = fmt(spent);
+      document.getElementById('monthly-progress').style.width = pct + '%';
+      document.getElementById('monthly-progress-text').textContent =
+        pct < 1
+          ? "You're using 0% of your monthly budget. Sweet pace."
+          : `You're using ${pct.toFixed(0)}% of your monthly budget.`;
+
+      const savingsRec = analytics.gardenPlotBreakdown.find(g => g.group === 'savings');
+      const savingsAmt = savingsRec ? savingsRec.amount : 0;
+      const remaining = Math.max(BUDGET - spent, 0);
+      document.getElementById('savings-amount').textContent = fmt(remaining);
+      document.getElementById('savings-pct').textContent = Math.round((remaining / BUDGET) * 100) + '%';
+      document.getElementById('savings-meta').textContent = savingsAmt > 0
+        ? `${fmt(savingsAmt)} consciously saved`
+        : 'room to grow your jar';
+
+      renderChart(analytics.spendingTrends.daily);
+      renderCategories(expenses, analytics);
+      renderRecent(expenses);
+      renderInsights(analytics);
+    }
+
+    function renderChart(daily) {
+      const el = document.getElementById('chart-bars');
+      if (!daily || !daily.length) {
+        el.innerHTML = '<div style="color:var(--pp-text-muted);font-size:0.85rem;padding:40px 0;width:100%;text-align:center">No spending data yet</div>';
+        return;
+      }
+      const max = Math.max(...daily.map(d => d.amount), 1);
+      el.innerHTML = daily.map(d => {
+        const h = Math.max((d.amount / max) * 100, 6);
+        return `<div class="pp-chart-bar-wrap">
+          <div class="pp-chart-bar" style="height:${h}%" title="${fmt(d.amount)}"></div>
+          <span class="pp-chart-label">${d.day}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function renderCategories(expenses, analytics) {
+      const byCat = {};
+      expenses.forEach(e => {
+        const name = e.category?.name || 'Other';
+        byCat[name] = (byCat[name] || 0) + e.amount;
+      });
+      const sorted = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+      const total = sorted.reduce((s, [, v]) => s + v, 0);
+      document.getElementById('category-total').textContent = fmt(total);
+
+      const listEl = document.getElementById('category-list');
+      const topEl = document.getElementById('top-categories');
+
+      if (!sorted.length) {
+        listEl.innerHTML = '<li class="pp-cat-item" style="color:var(--pp-text-muted);justify-content:center">No categories yet</li>';
+        topEl.innerHTML = '<li class="pp-cat-item" style="color:var(--pp-text-muted);justify-content:center">—</li>';
+        return;
+      }
+
+      listEl.innerHTML = sorted.map(([name, amt]) => `
+        <li class="pp-cat-item">
+          <span class="pp-cat-left"><span>${PocketPetal.categoryEmoji(name)}</span><span>${name}</span></span>
+          <strong>${fmt(amt)}</strong>
+        </li>
+      `).join('');
+
+      topEl.innerHTML = sorted.slice(0, 4).map(([name, amt]) => `
+        <li class="pp-cat-item">
+          <span class="pp-cat-left"><span>${PocketPetal.categoryEmoji(name)}</span><span>${name}</span></span>
+          <strong>${fmt(amt)}</strong>
+        </li>
+      `).join('');
+    }
+
+    function renderRecent(expenses) {
+      const el = document.getElementById('recent-list');
+      if (!expenses.length) return;
+
+      el.innerHTML = expenses.slice(0, 6).map(exp => {
+        const d = new Date(exp.date);
+        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const cat = exp.category?.name || 'Other';
+        const emoji = PocketPetal.categoryEmoji(cat);
+        const pay = (exp.paymentMethod || '').toUpperCase().replace(' CARD', '');
+        return `<div class="pp-tx-item">
+          <div class="pp-tx-left">
+            <div class="pp-tx-emoji">${emoji}</div>
+            <div>
+              <p class="pp-tx-title">${exp.description || 'Expense'}</p>
+              <p class="pp-tx-meta">${cat} · ${dateStr} · ${pay}</p>
+            </div>
+          </div>
+          <span class="pp-tx-amount">${fmtFull(exp.amount)}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function renderInsights(analytics) {
+      if (analytics.mostUsedCategory) {
+        const c = analytics.mostUsedCategory;
+        document.getElementById('insights-text').textContent =
+          `You visit "${c.name}" most often (${c.count}×, ${fmt(c.amount)} total). A lovely jar to watch.`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+  </script>
+</body>
+</html>

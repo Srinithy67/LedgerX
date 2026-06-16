@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign in · PocketPetal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="/css/pocketpetal.css" rel="stylesheet"/>
+</head>
+<body>
+  <div class="pp-login-page">
+    <div class="pp-login-card">
+      <div style="text-align:center;margin-bottom:28px">
+        <div style="font-size:2.5rem;margin-bottom:12px">🍓</div>
+        <h1 style="font-size:1.75rem;font-weight:800;color:var(--pp-primary-dark);margin:0;letter-spacing:-0.03em">PocketPetal</h1>
+        <p style="color:var(--pp-text-muted);font-size:0.88rem;margin:6px 0 0">little finance journal</p>
+      </div>
+
+      <div id="alert-box" class="hidden" style="margin-bottom:16px;padding:12px 16px;border-radius:12px;font-size:0.85rem"></div>
+
+      <div style="display:flex;border-bottom:1px solid var(--pp-border);margin-bottom:24px">
+        <button id="tab-login" type="button" style="flex:1;padding:10px;border:none;background:none;font-weight:700;font-size:0.88rem;cursor:pointer;border-bottom:2px solid var(--pp-primary);color:var(--pp-primary)">Sign In</button>
+        <button id="tab-register" type="button" style="flex:1;padding:10px;border:none;background:none;font-weight:700;font-size:0.88rem;cursor:pointer;border-bottom:2px solid transparent;color:var(--pp-text-muted)">Create Account</button>
+      </div>
+
+      <form id="auth-form">
+        <div class="pp-field">
+          <label class="pp-label" for="email">Email</label>
+          <input class="pp-input" type="email" id="email" required placeholder="you@email.com"/>
+        </div>
+        <div class="pp-field">
+          <label class="pp-label" for="password">Password</label>
+          <input class="pp-input" type="password" id="password" required placeholder="••••••••"/>
+        </div>
+        <button type="submit" id="submit-btn" class="pp-btn pp-btn-primary" style="width:100%;justify-content:center;margin-top:8px">
+          Enter your garden →
+        </button>
+      </form>
+
+      <p style="text-align:center;margin-top:20px;font-size:0.78rem;color:var(--pp-text-muted)">
+        "Every rupee you log is a quiet act of self-care."
+      </p>
+    </div>
+  </div>
+
+  <script>
+    if (localStorage.getItem('pocketpetal_token')) window.location.href = '/index.html';
+
+    let mode = 'login';
+    const tabLogin = document.getElementById('tab-login');
+    const tabRegister = document.getElementById('tab-register');
+    const submitBtn = document.getElementById('submit-btn');
+    const alertBox = document.getElementById('alert-box');
+
+    function switchTab(m) {
+      mode = m;
+      const active = 'flex:1;padding:10px;border:none;background:none;font-weight:700;font-size:0.88rem;cursor:pointer;border-bottom:2px solid var(--pp-primary);color:var(--pp-primary)';
+      const inactive = 'flex:1;padding:10px;border:none;background:none;font-weight:700;font-size:0.88rem;cursor:pointer;border-bottom:2px solid transparent;color:var(--pp-text-muted)';
+      tabLogin.style.cssText = m === 'login' ? active : inactive;
+      tabRegister.style.cssText = m === 'register' ? active : inactive;
+      submitBtn.textContent = m === 'login' ? 'Enter your garden →' : 'Sow new seeds →';
+      alertBox.className = 'hidden';
+    }
+
+    tabLogin.onclick = () => switchTab('login');
+    tabRegister.onclick = () => switchTab('register');
+
+    function showAlert(msg, ok) {
+      alertBox.textContent = msg;
+      alertBox.className = '';
+      alertBox.style.background = ok ? 'var(--pp-secondary-soft)' : 'var(--pp-primary-soft)';
+      alertBox.style.color = ok ? 'var(--pp-secondary)' : 'var(--pp-primary-dark)';
+      alertBox.style.border = '1px solid var(--pp-border)';
+    }
+
+    document.getElementById('auth-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Authentication failed');
+        if (mode === 'register') {
+          showAlert('Account created! Signing you in…', true);
+          setTimeout(async () => {
+            const lr = await fetch('/api/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password }),
+            });
+            const ld = await lr.json();
+            if (lr.ok && ld.success) saveSession(ld.data);
+            else { switchTab('login'); showAlert('Please sign in with your new account.'); }
+          }, 800);
+        } else {
+          saveSession(data.data);
+        }
+      } catch (err) { showAlert(err.message); }
+    };
+
+    function saveSession(auth) {
+      localStorage.setItem('pocketpetal_token', auth.session.accessToken);
+      localStorage.setItem('pocketpetal_user', JSON.stringify(auth.user));
+      localStorage.setItem('pocketpetal_profile', JSON.stringify(auth.profile));
+      window.location.href = '/index.html';
+    }
+  </script>
+</body>
+</html>
