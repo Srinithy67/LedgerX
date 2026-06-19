@@ -57,4 +57,21 @@ export class AuthController {
       next(error);
     }
   };
+
+  refresh = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { refreshToken } = req.body;
+      if (!refreshToken) {
+        res.status(400).json({ success: false, error: 'Missing refresh token' });
+        return;
+      }
+      const session = await this.authService.refreshSession(refreshToken);
+      res.status(200).json({
+        success: true,
+        data: session,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

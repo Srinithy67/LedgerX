@@ -89,7 +89,7 @@
     }
 
     async function loadCategories() {
-      const res = await fetch('/api/categories', { headers: { Authorization: `Bearer ${token()}` } });
+      const res = await PocketPetal.authFetch('/api/categories');
       const data = await res.json();
       if (res.ok && data.success) {
         categories = data.data;
@@ -100,7 +100,7 @@
     }
 
     async function loadExpenses() {
-      const res = await fetch('/api/expenses', { headers: { Authorization: `Bearer ${token()}` } });
+      const res = await PocketPetal.authFetch('/api/expenses');
       const data = await res.json();
       const tbody = document.getElementById('ledger-body');
       if (!res.ok || !data.success) return;
@@ -138,9 +138,9 @@
         date: new Date(document.getElementById('date').value).toISOString(),
       };
       const url = id ? `/api/expenses/${id}` : '/api/expenses';
-      const res = await fetch(url, {
+      const res = await PocketPetal.authFetch(url, {
         method: id ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -150,7 +150,7 @@
     };
 
     window.editExpense = async id => {
-      const res = await fetch(`/api/expenses/${id}`, { headers: { Authorization: `Bearer ${token()}` } });
+      const res = await PocketPetal.authFetch(`/api/expenses/${id}`);
       const data = await res.json();
       if (!res.ok || !data.success) return;
       const exp = data.data;
@@ -167,7 +167,7 @@
 
     window.deleteExpense = async id => {
       if (!confirm('Prune this entry from your garden?')) return;
-      const res = await fetch(`/api/expenses/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token()}` } });
+      const res = await PocketPetal.authFetch(`/api/expenses/${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (res.ok && data.success) loadExpenses();
       else alert(data.error || 'Failed');

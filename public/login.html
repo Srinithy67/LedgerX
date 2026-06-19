@@ -108,6 +108,9 @@
 
     function saveSession(auth) {
       localStorage.setItem('pocketpetal_token', auth.session.accessToken);
+      if (auth.session.refreshToken) {
+        localStorage.setItem('pocketpetal_refresh_token', auth.session.refreshToken);
+      }
       localStorage.setItem('pocketpetal_user', JSON.stringify(auth.user));
       localStorage.setItem('pocketpetal_profile', JSON.stringify(auth.profile));
       window.location.href = '/index.html';

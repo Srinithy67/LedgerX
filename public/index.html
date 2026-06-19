@@ -104,8 +104,8 @@
     async function loadDashboard() {
       try {
         const [expRes, ansRes] = await Promise.all([
-          fetch('/api/expenses', { headers: { Authorization: `Bearer ${token()}` } }),
-          fetch('/api/analytics', { headers: { Authorization: `Bearer ${token()}` } }),
+          PocketPetal.authFetch('/api/expenses'),
+          PocketPetal.authFetch('/api/analytics'),
         ]);
         const expData = await expRes.json();
         const ansData = await ansRes.json();

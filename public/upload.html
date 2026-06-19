@@ -43,7 +43,7 @@
     let pending = [];
 
     async function loadCategories() {
-      const res = await fetch('/api/categories', { headers: { Authorization: `Bearer ${token()}` } });
+      const res = await PocketPetal.authFetch('/api/categories');
       const data = await res.json();
       if (res.ok && data.success) categories = data.data;
     }
@@ -77,9 +77,8 @@
       const fd = new FormData();
       fd.append('receipt', file);
       try {
-        const res = await fetch('/api/ocr', {
+        const res = await PocketPetal.authFetch('/api/ocr', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token()}` },
           body: fd,
         });
         const data = await res.json();
@@ -140,9 +139,9 @@
       const item = pending.find(p => p.id === id);
       if (!item) return;
       try {
-        const res = await fetch('/api/expenses', {
+        const res = await PocketPetal.authFetch('/api/expenses', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             amount: item.amount, description: item.description,
             categoryId: item.categoryId || null,

@@ -3,9 +3,72 @@
  */
 (function () {
   const TOKEN_KEY = 'pocketpetal_token';
+  const REFRESH_TOKEN_KEY = 'pocketpetal_refresh_token';
   const USER_KEY = 'pocketpetal_user';
   const PROFILE_KEY = 'pocketpetal_profile';
   const BUDGET_LIMIT = 35000;
+
+  let _isRefreshing = false;
+  let _refreshQueue = [];
+
+  /**
+   * Wrapper around fetch that automatically injects the auth header
+   * and refreshes the token on 401 responses.
+   */
+  async function authFetch(url, options = {}) {
+    const token = localStorage.getItem(TOKEN_KEY);
+    const headers = { ...(options.headers || {}) };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(url, { ...options, headers });
+
+    if (res.status === 401) {
+      // Try refreshing the token
+      const newToken = await tryRefreshToken();
+      if (newToken) {
+        headers['Authorization'] = `Bearer ${newToken}`;
+        return fetch(url, { ...options, headers });
+      }
+      // Refresh failed — force re-login
+      logout();
+      return res;
+    }
+    return res;
+  }
+
+  async function tryRefreshToken() {
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+    if (!refreshToken) return null;
+
+    // If already refreshing, wait for that to finish
+    if (_isRefreshing) {
+      return new Promise((resolve) => _refreshQueue.push(resolve));
+    }
+
+    _isRefreshing = true;
+    try {
+      const res = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        localStorage.setItem(TOKEN_KEY, data.data.accessToken);
+        if (data.data.refreshToken) {
+          localStorage.setItem(REFRESH_TOKEN_KEY, data.data.refreshToken);
+        }
+        // Resolve all queued requests
+        _refreshQueue.forEach((cb) => cb(data.data.accessToken));
+        _refreshQueue = [];
+        return data.data.accessToken;
+      }
+      return null;
+    } catch {
+      return null;
+    } finally {
+      _isRefreshing = false;
+    }
+  }
 
   const NAV = [
     { page: 'dashboard', href: '/index.html', emoji: '🏠', label: 'Dashboard' },
@@ -177,12 +240,11 @@
   }
 
   async function setTheme(themeName) {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return;
+    if (!localStorage.getItem(TOKEN_KEY)) return;
     try {
-      const res = await fetch('/api/auth/profile/theme', {
+      const res = await authFetch('/api/auth/profile/theme', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ theme: themeName }),
       });
       const data = await res.json();
@@ -208,7 +270,7 @@
     getToken: () => localStorage.getItem(TOKEN_KEY),
     getUser, getProfile, getDisplayName, getGreeting, formatDate,
     formatMoney, formatMoneyFull, categoryEmoji,
-    requireAuth, logout, setTheme, populateHero, init,
+    requireAuth, logout, setTheme, populateHero, init, authFetch,
     BUDGET_LIMIT, NAV, CATEGORY_EMOJI,
   };
 

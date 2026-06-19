@@ -51,8 +51,6 @@
   </div>
 
   <script>
-    const token = () => PocketPetal.getToken();
-
     const GROUP_LABEL = { essential: 'Essential', leisure: 'Leisure', savings: 'Savings' };
     const GROUP_COLOR = {
       essential: 'var(--pp-primary-soft)',
@@ -61,7 +59,7 @@
     };
 
     async function loadCategories() {
-      const res = await fetch('/api/categories', { headers: { Authorization: `Bearer ${token()}` } });
+      const res = await PocketPetal.authFetch('/api/categories');
       const data = await res.json();
       const grid = document.getElementById('categories-grid');
       if (!res.ok || !data.success) return;
@@ -96,9 +94,9 @@
         categoryGroup: document.getElementById('categoryGroup').value,
       };
       const url = id ? `/api/categories/${id}` : '/api/categories';
-      const res = await fetch(url, {
+      const res = await PocketPetal.authFetch(url, {
         method: id ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -118,7 +116,7 @@
 
     window.deleteCat = async id => {
       if (!confirm('Prune this category?')) return;
-      const res = await fetch(`/api/categories/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token()}` } });
+      const res = await PocketPetal.authFetch(`/api/categories/${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (res.ok && data.success) loadCategories();
       else alert(data.error || 'Failed');

@@ -42,6 +42,7 @@ export class AuthService {
       profile,
       session: data.session ? {
         accessToken: data.session.access_token,
+        refreshToken: data.session.refresh_token,
         expiresAt: data.session.expires_at,
       } : null,
     };
@@ -79,8 +80,23 @@ export class AuthService {
       profile,
       session: {
         accessToken: data.session.access_token,
+        refreshToken: data.session.refresh_token,
         expiresAt: data.session.expires_at,
       },
+    };
+  }
+
+  async refreshSession(refreshToken: string) {
+    const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
+
+    if (error || !data.session) {
+      throw new AppError('Unable to refresh session — please log in again', 401);
+    }
+
+    return {
+      accessToken: data.session.access_token,
+      refreshToken: data.session.refresh_token,
+      expiresAt: data.session.expires_at,
     };
   }
 
