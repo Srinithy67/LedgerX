@@ -1,46 +1,64 @@
 # LedgerX
 
-LedgerX is a personal finance management platform designed to simplify expense tracking and spending analysis.
+LedgerX is a modern expense management platform that combines manual expense tracking with automated transaction capture.
 
-Version 2 introduces analytics and visual insights, helping users understand where their money goes.
+Users can upload payment screenshots, review extracted transactions, and organize expenses through a streamlined workflow.
 
 ## Features
 
-### Expense Management
+### Expense Tracking
 
-- Manual expense tracking
-- Expense editing and deletion
-- Payment method tracking
+- Manual expense entry
 - Transaction history
+- Payment method tracking
+- Category management
 
-### Categories
+### Smart Capture
 
-- Built-in categories
-- Custom user-defined categories
-- Category colors and icons
+- Screenshot uploads
+- OCR-based transaction extraction
+- Review before saving
+- Automated transaction detection
 
-### Dashboard Analytics
+### Analytics
 
-- Monthly spending summary
-- Recent transactions
-- Category breakdown charts
-- Spending trends
-- Most-used categories
+- Monthly spending reports
+- Category breakdowns
+- Expense trends
+- Spending summaries
+
+### Personalization
+
+- Matcha Strawberry theme
+- Theme architecture for future themes
+
+## Architecture
+
+User
+→ Next.js Frontend
+→ Supabase Database
+
+Screenshot Upload
+→ OCR Processing
+→ Transaction Review
+→ Expense Storage
 
 ## Tech Stack
 
 - Next.js
+- TypeScript
 - Tailwind CSS
 - Supabase
-- Recharts
+- OCR Service
 
-## Roadmap
+## Future Roadmap
 
-- Screenshot uploads
-- OCR extraction
-- Theme switching
-- Budget goals
+- Budget planning
+- Spending forecasts
+- Recurring expense detection
+- Export to CSV
+- Multiple themes
 
-## Objective
+## Vision
 
-Provide clear financial visibility while maintaining a lightweight and intuitive experience.
+Reduce the effort required to maintain personal expense records while keeping users in control of categorization and organization.
