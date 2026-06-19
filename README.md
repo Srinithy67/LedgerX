@@ -1,31 +1,46 @@
 # LedgerX
 
-LedgerX is a modern expense tracking application that helps users record and organize their spending.
+LedgerX is a personal finance management platform designed to simplify expense tracking and spending analysis.
 
-The first version focuses on providing a simple and reliable way to manually log expenses and categorize transactions.
+Version 2 introduces analytics and visual insights, helping users understand where their money goes.
 
 ## Features
 
-- Manual expense entry
+### Expense Management
+
+- Manual expense tracking
+- Expense editing and deletion
+- Payment method tracking
+- Transaction history
+
+### Categories
+
 - Built-in categories
-- Custom categories
-- Expense history
-- Secure user authentication
-- Cloud database powered by Supabase
+- Custom user-defined categories
+- Category colors and icons
+
+### Dashboard Analytics
+
+- Monthly spending summary
+- Recent transactions
+- Category breakdown charts
+- Spending trends
+- Most-used categories
 
 ## Tech Stack
 
 - Next.js
 - Tailwind CSS
 - Supabase
+- Recharts
 
-## Current Scope
+## Roadmap
 
-Version 1 focuses on building a strong expense management foundation before introducing automation and analytics.
-
-## Upcoming Features
-
-- Dashboard analytics
 - Screenshot uploads
-- OCR transaction extraction
-- Theme customization
+- OCR extraction
+- Theme switching
+- Budget goals
+
+## Objective
+
+Provide clear financial visibility while maintaining a lightweight and intuitive experience.
