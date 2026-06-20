@@ -147,5 +147,54 @@
     app.querySelector('#pp-content-mount').appendChild(contentEl);
     contentEl.style.display = 'block';
 
+    document.getElementById('pp-logout-btn')?.addEventListener('click', logout);
 
+    // Bind event listeners for theme switcher buttons
+    app.querySelectorAll('.pp-theme-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const selectedTheme = btn.dataset.theme;
+        if (!selectedTheme) return;
+        await setTheme(selectedTheme);
+
+        // Update active class on buttons
+        app.querySelectorAll('.pp-theme-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Apply theme attribute to body
+        document.body.setAttribute('data-theme', selectedTheme);
+      });
+    });
+
+    const toggle = document.getElementById('pp-mobile-toggle');
+    const sidebar = document.getElementById('pp-sidebar');
+    const overlay = document.getElementById('pp-overlay');
+    const close = () => {
+      sidebar?.classList.remove('open');
+      overlay?.classList.remove('open');
+    };
+    toggle?.addEventListener('click', () => {
+      sidebar?.classList.toggle('open');
+      overlay?.classList.toggle('open');
+    });
+    overlay?.addEventListener('click', close);
+  }
+
+  function requireAuth() {
+    if (!localStorage.getItem(TOKEN_KEY)) {
+      window.location.href = '/login.html';
+      return false;
+    }
+    return true;
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = '/login.html';
+  }
+
+  function populateHero() {
+    const greetingEl = document.getElementById('pp-greeting');
+    const dateEl = document.getElementById('pp-date');
+    const name = getDisplayName();
+    if (greetingEl) {
 
