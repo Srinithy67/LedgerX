@@ -197,4 +197,55 @@
     const dateEl = document.getElementById('pp-date');
     const name = getDisplayName();
     if (greetingEl) {
+      greetingEl.innerHTML = `${getGreeting()}, <span class="pp-serif">${name}</span> 🌸`;
+    }
+    if (dateEl) dateEl.textContent = formatDate();
+  }
+
+  async function setTheme(themeName) {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return;
+    try {
+      const res = await fetch('/api/auth/profile/theme', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ theme: themeName }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(data.data));
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  function init() {
+    const authRequired = document.body.dataset.authRequired === 'true';
+    if (authRequired && !requireAuth()) return;
+
+    // Apply active theme attribute to body
+    const currentTheme = getProfile().theme || 'Matcha Strawberry';
+    document.body.setAttribute('data-theme', currentTheme);
+
+    const activePage = document.body.dataset.page || 'dashboard';
+    const pageTitle = document.body.dataset.pageTitle || '';
+    if (document.getElementById('pp-page-content')) {
+      renderShell(activePage, pageTitle);
+    }
+    populateHero();
+  }
+
+  window.PocketPetal = {
+    getToken: () => localStorage.getItem(TOKEN_KEY),
+    getUser, getProfile, getDisplayName, getGreeting, formatDate,
+    formatMoney, formatMoneyFull, categoryEmoji,
+    requireAuth, logout, setTheme, populateHero, init,
+    BUDGET_LIMIT, NAV, CATEGORY_EMOJI,
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
 
