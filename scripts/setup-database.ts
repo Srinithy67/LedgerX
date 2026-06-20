@@ -70,10 +70,35 @@ async function setupDatabase() {
     );
 
     alter table public.expenses add column if not exists date timestamptz;
-    update public.expenses
-      set date = transaction_date::timestamptz
-      where date is null and transaction_date is not null;
+    do $$
+    begin
+      if exists (
+        select 1
+        from information_schema.columns
+        where table_schema = 'public' and table_name = 'expenses' and column_name = 'transaction_date'
+      ) then
+        execute 'update public.expenses set date = transaction_date::timestamptz where date is null and transaction_date is not null';
+      end if;
+    end $$;
     alter table public.expenses alter column date set not null;
+
+    -- Clean up obsolete columns from expenses table
+    alter table public.expenses drop column if exists transaction_date;
+    alter table public.expenses drop column if exists merchant_name;
+    alter table public.expenses drop column if exists source_type;
+
+    -- Enforce not null on payment_method if not already set
+    update public.expenses set payment_method = 'Cash' where payment_method is null;
+    alter table public.expenses alter column payment_method set not null;
+
+    -- Clean up obsolete tables
+    drop table if exists public.extracted_transactions cascade;
+    drop table if exists public.ocr_uploads cascade;
+    drop table if exists public.users cascade;
+
+    -- Clean up obsolete custom types
+    drop type if exists public.source_type_enum cascade;
+    drop type if exists public.transaction_type_enum cascade;
 
     alter table public.profiles enable row level security;
     alter table public.categories enable row level security;
