@@ -30,7 +30,7 @@ Users can upload payment screenshots, review extracted transactions, and organiz
 ### Personalization
 
 - Matcha Strawberry theme
-- Theme architecture for future themes
+- future themes are planned keeping in mind a ocean blue and a lilac theme
 
 ## Architecture
 
