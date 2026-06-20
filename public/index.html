@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard · PocketPetal</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <link href="/css/pocketpetal.css" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link href="/css/pocketpetal.css" rel="stylesheet" />
   <script src="/js/shared.js" defer></script>
 </head>
+
 <body data-page="dashboard" data-auth-required="true" data-page-title="Dashboard">
 
   <div id="pp-page-content" style="display:none">
@@ -31,8 +35,11 @@
         </div>
         <p class="pp-card-label">This month</p>
         <p class="pp-card-value" id="monthly-spend">₹0</p>
-        <div class="pp-progress"><div class="pp-progress-bar" id="monthly-progress" style="width:0%"></div></div>
-        <p class="pp-card-meta" id="monthly-progress-text" style="margin-top:10px">You're using 0% of your monthly budget. Sweet pace.</p>
+        <div class="pp-progress">
+          <div class="pp-progress-bar" id="monthly-progress" style="width:0%"></div>
+        </div>
+        <p class="pp-card-meta" id="monthly-progress-text" style="margin-top:10px">You're using 0% of your monthly
+          budget. Sweet pace.</p>
       </div>
 
       <div class="pp-card">
@@ -42,7 +49,9 @@
         </div>
         <p class="pp-card-label">Savings jar</p>
         <p class="pp-card-value" id="savings-amount">₹35,000</p>
-        <div class="pp-progress green"><div class="pp-progress-bar" id="savings-progress" style="width:100%"></div></div>
+        <div class="pp-progress green">
+          <div class="pp-progress-bar" id="savings-progress" style="width:100%"></div>
+        </div>
         <p class="pp-card-meta" id="savings-meta" style="margin-top:10px">saved this month</p>
       </div>
     </div>
@@ -53,7 +62,8 @@
           <p class="pp-section-title">14-day trend</p>
           <p class="pp-section-sub">Where the petals fell · daily ₹</p>
           <div class="pp-chart" id="chart-bars">
-            <div style="color:var(--pp-text-muted);font-size:0.85rem;padding:40px 0;width:100%;text-align:center">Loading chart…</div>
+            <div style="color:var(--pp-text-muted);font-size:0.85rem;padding:40px 0;width:100%;text-align:center">
+              Loading chart…</div>
           </div>
         </div>
 
@@ -63,10 +73,12 @@
               <p class="pp-section-title" style="margin:0">Recent little things</p>
               <p class="pp-section-sub" style="margin:4px 0 0">your latest blooms</p>
             </div>
-            <a href="/manual.html" style="font-size:0.82rem;font-weight:700;color:var(--pp-primary);text-decoration:none">add new →</a>
+            <a href="/manual.html"
+              style="font-size:0.82rem;font-weight:700;color:var(--pp-primary);text-decoration:none">add new →</a>
           </div>
           <div class="pp-tx-list" id="recent-list">
-            <div style="text-align:center;padding:32px;color:var(--pp-text-muted);font-size:0.88rem">No little things yet — log your first expense!</div>
+            <div style="text-align:center;padding:32px;color:var(--pp-text-muted);font-size:0.88rem">No little things
+              yet — log your first expense!</div>
           </div>
         </div>
       </div>
@@ -86,7 +98,8 @@
           <ul class="pp-cat-list" id="top-categories">
             <li class="pp-cat-item" style="color:var(--pp-text-muted);justify-content:center">—</li>
           </ul>
-          <p class="pp-card-meta" id="insights-text" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--pp-border)">
+          <p class="pp-card-meta" id="insights-text"
+            style="margin-top:14px;padding-top:14px;border-top:1px solid var(--pp-border)">
             Start logging to see where your petals gather most.
           </p>
         </div>
@@ -227,4 +240,5 @@
     document.addEventListener('DOMContentLoaded', loadDashboard);
   </script>
 </body>
+
 </html>

@@ -80,6 +80,8 @@
     const initial = name.charAt(0).toUpperCase();
     const nudge = NUDGES[new Date().getDate() % NUDGES.length];
 
+    const currentTheme = getProfile().theme || 'Matcha Strawberry';
+
     const navHtml = NAV.map((item) => `
       <a href="${item.href}" class="pp-nav-item${item.page === activePage ? ' active' : ''}">
         <span class="pp-nav-emoji">${item.emoji}</span>
@@ -107,6 +109,14 @@
           <div>
             <p class="pp-user-name">${name}</p>
             <p class="pp-user-plan">free plan · ✨</p>
+          </div>
+        </div>
+        <div class="pp-theme-switcher-box">
+          <div class="pp-theme-label">Theme</div>
+          <div class="pp-theme-buttons">
+            <button class="pp-theme-btn${currentTheme === 'ocean blue' ? ' active' : ''}" data-theme="ocean blue" type="button" title="Ocean Blue">🌊 Blue</button>
+            <button class="pp-theme-btn${currentTheme === 'lilac' ? ' active' : ''}" data-theme="lilac" type="button" title="Lilac">🪻 Lilac</button>
+            <button class="pp-theme-btn${currentTheme === 'Matcha Strawberry' ? ' active' : ''}" data-theme="Matcha Strawberry" type="button" title="Matcha Strawberry">🍓 Matcha</button>
           </div>
         </div>
         <button class="pp-logout-btn" type="button" id="pp-logout-btn">Log out</button>
@@ -137,84 +147,5 @@
     app.querySelector('#pp-content-mount').appendChild(contentEl);
     contentEl.style.display = 'block';
 
-    document.getElementById('pp-logout-btn')?.addEventListener('click', logout);
 
-    const toggle = document.getElementById('pp-mobile-toggle');
-    const sidebar = document.getElementById('pp-sidebar');
-    const overlay = document.getElementById('pp-overlay');
-    const close = () => {
-      sidebar?.classList.remove('open');
-      overlay?.classList.remove('open');
-    };
-    toggle?.addEventListener('click', () => {
-      sidebar?.classList.toggle('open');
-      overlay?.classList.toggle('open');
-    });
-    overlay?.addEventListener('click', close);
-  }
 
-  function requireAuth() {
-    if (!localStorage.getItem(TOKEN_KEY)) {
-      window.location.href = '/login.html';
-      return false;
-    }
-    return true;
-  }
-
-  function logout() {
-    localStorage.clear();
-    window.location.href = '/login.html';
-  }
-
-  function populateHero() {
-    const greetingEl = document.getElementById('pp-greeting');
-    const dateEl = document.getElementById('pp-date');
-    const name = getDisplayName();
-    if (greetingEl) {
-      greetingEl.innerHTML = `${getGreeting()}, <span class="pp-serif">${name}</span> 🌸`;
-    }
-    if (dateEl) dateEl.textContent = formatDate();
-  }
-
-  async function setTheme(themeName) {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return;
-    try {
-      const res = await fetch('/api/auth/profile/theme', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ theme: themeName }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        localStorage.setItem(PROFILE_KEY, JSON.stringify(data.data));
-      }
-    } catch (e) { console.error(e); }
-  }
-
-  function init() {
-    const authRequired = document.body.dataset.authRequired === 'true';
-    if (authRequired && !requireAuth()) return;
-
-    const activePage = document.body.dataset.page || 'dashboard';
-    const pageTitle = document.body.dataset.pageTitle || '';
-    if (document.getElementById('pp-page-content')) {
-      renderShell(activePage, pageTitle);
-    }
-    populateHero();
-  }
-
-  window.PocketPetal = {
-    getToken: () => localStorage.getItem(TOKEN_KEY),
-    getUser, getProfile, getDisplayName, getGreeting, formatDate,
-    formatMoney, formatMoneyFull, categoryEmoji,
-    requireAuth, logout, setTheme, populateHero, init,
-    BUDGET_LIMIT, NAV, CATEGORY_EMOJI,
-  };
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();

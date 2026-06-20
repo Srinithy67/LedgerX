@@ -33,7 +33,7 @@ export const categoryCreateSchema = z.object({
 export const categoryUpdateSchema = categoryCreateSchema.partial();
 
 export const themeUpdateSchema = z.object({
-  theme: z.enum(['Matcha Strawberry', 'Ocean Milk', 'Pastel Purple'], {
-    errorMap: () => ({ message: 'Theme must be Matcha Strawberry, Ocean Milk, or Pastel Purple' }),
+  theme: z.enum(['Matcha Strawberry', 'Ocean Milk', 'Pastel Purple', 'ocean blue', 'lilac'], {
+    errorMap: () => ({ message: 'Theme must be Matcha Strawberry, Ocean Milk, Pastel Purple, ocean blue, or lilac' }),
   }),
 });

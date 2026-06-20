@@ -599,3 +599,55 @@ html, body {
   .pp-content { padding: 20px 16px 40px; }
   .pp-topbar { padding: 14px 16px; }
 }
+
+/* Theme Switcher */
+.pp-theme-switcher-box {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: var(--pp-radius-sm);
+  background: var(--pp-surface);
+  border: 1px solid var(--pp-border);
+}
+
+.pp-theme-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pp-text-muted);
+  margin-bottom: 8px;
+}
+
+.pp-theme-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.pp-theme-btn {
+  flex: 1;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--pp-border-strong);
+  background: white;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.pp-theme-btn:hover {
+  background: var(--pp-bg-soft);
+  transform: translateY(-1px);
+}
+
+.pp-theme-btn.active {
+  background: var(--pp-primary-soft);
+  border-color: var(--pp-primary);
+  color: var(--pp-primary);
+  font-weight: 700;
+}
+
