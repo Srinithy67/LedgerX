@@ -62,3 +62,7 @@ Screenshot Upload
 ## Vision
 
 Reduce the effort required to maintain personal expense records while keeping users in control of categorization and organization.
+
+## Privacy
+
+Privacy is guaranteed because your UPI payment app is not linked to the website.
