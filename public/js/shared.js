@@ -203,18 +203,22 @@
   }
 
   async function setTheme(themeName) {
+    // Store the selected theme locally right away so UI persists across navigation
+    const existingProfile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
+    const updatedProfile = { ...existingProfile, theme: themeName };
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(updatedProfile));
+    // Also update the body attribute instantly
+    document.body.setAttribute('data-theme', themeName);
+
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
     try {
-      const res = await fetch('/api/auth/profile/theme', {
+      // Persist the theme to the backend (async, non‑blocking for UI)
+      await fetch('/api/auth/profile/theme', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ theme: themeName }),
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        localStorage.setItem(PROFILE_KEY, JSON.stringify(data.data));
-      }
     } catch (e) { console.error(e); }
   }
 
