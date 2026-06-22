@@ -14,6 +14,13 @@
     { page: 'categories', href: '/categories.html', emoji: '🏷', label: 'Categories' },
   ];
 
+  // Mapping of theme name to brand emoji/icon displayed in the sidebar
+  const THEME_BRAND = {
+    'ocean blue': '🌊',
+    'lilac': '🪻',
+    'Matcha Strawberry': '🍓',
+  };
+
   const NUDGES = [
     'Every rupee you log is a quiet act of self-care.',
     'Small petals, steady roots — your garden grows.',
@@ -92,7 +99,7 @@
     return `
       <aside class="pp-sidebar" id="pp-sidebar">
         <div class="pp-brand">
-          <span class="pp-brand-icon">🍓</span>
+          <span class="pp-brand-icon">${THEME_BRAND[currentTheme] || '🍓'}</span>
           <div>
             <h1 class="pp-brand-title">PocketPetal</h1>
             <p class="pp-brand-sub">little finance journal</p>
@@ -162,6 +169,11 @@
 
         // Apply theme attribute to body
         document.body.setAttribute('data-theme', selectedTheme);
+        // Update the brand icon dynamically after theme change
+        const brandEl = document.querySelector('.pp-brand-icon');
+        if (brandEl) {
+          brandEl.textContent = THEME_BRAND[selectedTheme] || '🍓';
+        }
       });
     });
 
